@@ -1,23 +1,19 @@
-import java.awt.image.BufferedImage;
 import java.io.Serializable;
 
 public class Item implements Serializable{
-	String name;
-	double price;
-	String desc;
+
+	private static final long serialVersionUID = 1L;
+	private String name;
+	private double price;
+	private String desc;
 	//used to set up image processing https://www.geeksforgeeks.org/image-processing-in-java-read-and-write/
-	BufferedImage image;
+	private String imageURL;
 	
-	public Item(String name, double price, String desc, BufferedImage image) {
+	public Item(String name, double price, String desc, String image) {
 		this.name = name;
 		this.price = price;
 		this.desc = desc;
-		this.image = image;
-	}
-	
-	//TODO
-	public boolean verify() {
-		return false;
+		this.imageURL = image;
 	}
 	
 	public String getName() {
@@ -32,7 +28,7 @@ public class Item implements Serializable{
 		return this.desc;
 	}
 	
-	public BufferedImage getImage() {
-		return this.image;
+	public String getImage() {
+		return this.imageURL;
 	}
 }

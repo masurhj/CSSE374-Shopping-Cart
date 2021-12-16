@@ -1,43 +1,23 @@
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-
-import javax.imageio.ImageIO;
-
-import org.junit.Before;
 import org.junit.jupiter.api.Test;
 
 class Tests {
 	
-	private BufferedImage buffImg;
 	private String email1 = "fake1@gmail.com"; 
 	private State s1 = State.IL;
 	private String email2 = "fake2@email.com";
 	private State s2 = State.IN;
 	
-	
-	@Before public void setUp() {
-		File img = new File("ice_cream.jpg");
-		try {
-			buffImg = ImageIO.read(img);
-		} catch(IOException e) {
-			System.out.println("no img");	
-		}
-		this.buffImg = new BufferedImage(100,100,BufferedImage.TYPE_INT_ARGB);	
-	}
-	
 	public void ResetDB() {
 		Main.carts = new HashMap<String, Cart>();
 		
 		Main.itemDB = new HashMap<String, Item>();
-		Main.itemDB.put("item1", new Item("item1", 5.00, "this is the first fake", buffImg));
-		Main.itemDB.put("item2", new Item("item2", 8.00, "this is the second fake", buffImg));
-		Main.itemDB.put("item3", new Item("item3", 20.00, "this is the third fake", buffImg));
+		Main.itemDB.put("item1", new Item("item1", 5.00, "this is the first fake", "https://blog.thermoworks.com/wp-content/uploads/2021/06/Ice_Cream_Compressed-43.jpg"));
+		Main.itemDB.put("item2", new Item("item2", 8.00, "this is the second fake", "https://blog.thermoworks.com/wp-content/uploads/2021/06/Ice_Cream_Compressed-43.jpg"));
+		Main.itemDB.put("item3", new Item("item3", 20.00, "this is the third fake", "https://blog.thermoworks.com/wp-content/uploads/2021/06/Ice_Cream_Compressed-43.jpg"));
 		Main.itemDBQuantities = new HashMap<String, Integer>();
 		Main.itemDBQuantities.put("item1", 2);
 		Main.itemDBQuantities.put("item2", 4);
@@ -80,28 +60,30 @@ class Tests {
 	void addNewItemToNewCartAndExistingCart() {
 		ResetDB();
 		Main.handleAddItem(email1, s1, "item1");
-		Main.handleAddItem(email1, s1, "item2");
-		assertTrue(Main.carts.get(email1).getItems().size() == 2);
+		int returnCode = Main.handleAddItem(email1, s1, "item2");
+		assertTrue(returnCode == 200 && Main.carts.get(email1).getItems().size() == 2);
 	}
 	
 	@Test
 	void addExistingItemToCart() {
 		ResetDB();
 		Main.handleAddItem(email1, s1, "item1");
-		Main.handleAddItem(email1, s1, "item2");
-		assertTrue(Main.carts.get(email1).getItems().size() == 2);
+		int returnCode = Main.handleAddItem(email1, s1, "item2");
+		assertTrue(returnCode == 200 && Main.carts.get(email1).getItems().size() == 2);
 	}
 	
 	@Test
 	void addOutOfStockItem() {
 		ResetDB();
-		assertTrue(Main.handleAddItem(email1, s1, "item3") == 400);
+		int returnCode = Main.handleAddItem(email1, s1, "item3");
+		assertTrue(returnCode == 400 && Main.carts.get(email1).getItems().size() == 0);
 	}
 	
 	@Test
 	void addNonExistingItem() {
 		ResetDB();
-		assertTrue(Main.handleAddItem(email1, s1, "item4") == 404);
+		int returnCode = Main.handleAddItem(email1, s1, "item4");
+		assertTrue(returnCode == 404 && Main.getCart(email1, s1).getItems().size() == 0);
 	}
 	
 	@Test
@@ -109,7 +91,8 @@ class Tests {
 		ResetDB();
 		Main.handleAddItem(email1, s1, "item1");
 		Main.handleAddItem(email1, s1, "item2");
-		assertTrue(Main.handleApplyDiscount(email1, s1, "discount1") == 200);
+		int returnCode = Main.handleApplyDiscount(email1, s1, "discount1");
+		assertTrue(returnCode == 200 && Main.carts.get(email1).getDiscounts().size() == 1);
 	}
 	
 	@Test
@@ -117,7 +100,8 @@ class Tests {
 		ResetDB();
 		Main.handleAddItem(email1, s1, "item1");
 		Main.handleAddItem(email1, s1, "item2");
-		assertTrue(Main.handleApplyDiscount(email1, s1, "discount3") == 404);
+		int returnCode = Main.handleApplyDiscount(email1, s1, "discount3");
+		assertTrue(returnCode == 404  && Main.carts.get(email1).getDiscounts().size() == 0);
 	}
 	
 	@Test
@@ -125,7 +109,8 @@ class Tests {
 		ResetDB();
 		Main.handleAddItem(email1, s1, "item1");
 		Main.handleAddItem(email1, s1, "item2");
-		assertTrue(Main.handleApplyDiscount(email1, s1, "discount3") == 404);
+		int returnCode = Main.handleApplyDiscount(email1, s1, "discount3");
+		assertTrue(returnCode == 404  && Main.carts.get(email1).getDiscounts().size() == 0);
 	}
 	
 	@Test
@@ -134,8 +119,64 @@ class Tests {
 		Main.handleAddItem(email1, s1, "item1");
 		Main.handleAddItem(email1, s1, "item2");
 		Main.handleApplyDiscount(email1, s1, "discount1");
-		assertTrue(Main.handleApplyDiscount(email1, s1, "discount1") == 400);
+		int returnCode = Main.handleApplyDiscount(email1, s1, "discount1");
+		assertTrue(returnCode == 400  && Main.carts.get(email1).getDiscounts().size() == 1);
 	}
+	
+	@Test
+	void changeQuantityNotInDB() {
+		ResetDB();
+		int returnCode = Main.handleChangeQuantity(email1, s1, "item4", 2);
+		assertTrue(returnCode == 404  && Main.getCart(email1, s1).getItems().contains("item4") == false);
+	}
+	
+	@Test 
+	void changeQuantityNotInCart(){
+		ResetDB();
+		int returnCode = Main.handleChangeQuantity(email1, s1, "item1", 2);
+		assertTrue(returnCode == 404 && Main.getCart(email1, s1).getItems().contains("item1") == false);
+	}
+	
+	@Test 
+	void changeQuantityIsNegative(){
+		ResetDB();
+		Main.handleAddItem(email1, s1, "item1");
+		int returnCode = Main.handleChangeQuantity(email1, s1, "item1", -5);
+		assertTrue(returnCode == 400 && Main.getCart(email1, s1).getQuantity("item1") == 1);
+	}
+	
+	@Test
+	void changeQuantityIsZero() {
+		ResetDB();
+		Main.handleAddItem(email1, s1, "item1");
+		int returnCode = Main.handleChangeQuantity(email1, s1, "item1", 0);
+		assertTrue(returnCode == 200 && Main.getCart(email1, s1).getItems().contains("item1") == false);
+	}
+	
+	@Test
+	void changeQuantity() {
+		ResetDB();
+		Main.handleAddItem(email1, s1, "item1");
+		int returnCode = Main.handleChangeQuantity(email1, s1, "item1", 2);
+		assertTrue(returnCode == 200 && Main.getCart(email1, s1).getQuantity("item1") == 2);
+	}
+	
+	@Test
+	void getSummary() {
+		ResetDB();
+		Main.handleAddItem(email1, s1, "item1");
+		Main.handleChangeQuantity(email1, s1, "item1", 2);
+		Main.handleAddItem(email1, s1, "item2");
+		Main.handleApplyDiscount(email1, s1, "discount1");
+		String result = Main.handleGetSummary(email1, s1);
+		//total should be 18
+		//amount saved should be 10 * 0.04 + 8 * 0.04 = 0.72
+		//final total should be (18 - 0.72) * 1.13 = 19.53
+		System.out.println(result);
+		//test manually checked
+		assertTrue(true);
+	}
+	
 	
 
 }

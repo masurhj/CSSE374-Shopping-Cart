@@ -1,10 +1,7 @@
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -37,11 +34,9 @@ public class Main {
 	public static Cart getCart(String email, State state) {
 		//if cart exists, grab it
 		if(carts.containsKey(email)) {
-			System.out.println("Existing cart");
 			return carts.get(email);
 		}
 		//else make a new one
-		System.out.println("new cart");
 		Cart newCart = new Cart(email, state);
 		carts.put(email, newCart);
 		UpdateDB();
@@ -49,12 +44,17 @@ public class Main {
 		return newCart;
 	}
 	
-	//TODO get summary
-	public void handleGetSummary() {
-		
+	public static String handleGetSummary(String email, State state) {
+		//get cart or create new one
+		Cart c = getCart(email, state);
+		//add to cart
+		String toReturn = c.getSummary();
+		carts.put(email, c);
+		UpdateDB();
+		ReloadDB();
+		return toReturn;
 	}
 	
-	//TODO apply discount
 	public static int handleApplyDiscount(String email, State state, String discount) {
 		//get cart or create new one
 		Cart c = getCart(email, state);
@@ -71,12 +71,23 @@ public class Main {
 		return returnCode;
 	}
 	
-	//TODO change quantity
-	public void handleChangeQuantity() {
+	public static int handleChangeQuantity(String email, State state, String item, int quantity) {
+		//get cart or create new one
+		Cart c = getCart(email, state);
+		//modify cart
+		int returnCode = c.changeQuantity(item, quantity);
 		
+		if(returnCode != 200) {
+			return returnCode;
+		}
+		
+		carts.put(email, c);
+		UpdateDB();
+		ReloadDB();
+		return returnCode;
 	}
 	
-	//serialzing and storing/reading object aided by https://examples.javacodegeeks.com/core-java/io/fileoutputstream/how-to-write-an-object-to-file-in-java/
+	//serializing and storing/reading object aided by https://examples.javacodegeeks.com/core-java/io/fileoutputstream/how-to-write-an-object-to-file-in-java/
 	public static void UpdateDB() {
 		try {
 			FileOutputStream fileOut = new FileOutputStream(cartDBPath);
