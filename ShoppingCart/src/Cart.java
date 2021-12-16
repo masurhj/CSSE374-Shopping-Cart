@@ -22,7 +22,7 @@ public class Cart implements Serializable{
 		
 	}
 	
-	//TODO calculate total
+	//TODO caalculate total
 	public void calculateTotal() {
 		
 	}
